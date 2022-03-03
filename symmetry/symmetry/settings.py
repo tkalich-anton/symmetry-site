@@ -79,8 +79,12 @@ WSGI_APPLICATION = 'symmetry.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'symmetry',
+        'USER': 'admin',
+        'PASSWORD': 'A54182',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 

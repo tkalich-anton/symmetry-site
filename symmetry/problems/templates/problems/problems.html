@@ -1,0 +1,35 @@
+{% extends 'problems/base.html' %}
+
+{% block title %}
+{{ title }}
+{% endblock %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+  <ul>
+    {% if branch_selected == 0 %}
+      <li class="active">Все Разделы</li>
+    {% else %}
+      <li><a href="{% url 'home' %}">Все Разделы</a></li>
+    {% endif %}
+
+    {% for branch in branches %}
+      {% if branch.pk == branch_selected %}
+        <li class="active">{{ branch.name }}</li>
+      {% else %}
+        <li><a href="{{ branch.get_absolute_url }}">{{ branch.name }}</a></li>
+      {% endif %}
+    {% endfor %}
+
+  </ul>
+  {% for theme in themes %}
+    <div class="card mb-2">
+      <div class="card-body">
+        <h5 class="card-title">Задание № {{ problem.id }}</h5>
+        <h6 class="card-subtitle text-muted">{{ problem.branch }}</h6>
+        {{ ex.html_field|safe}}
+        <a href="{{ problem.get_absolute_url }}" class="card-link">Подробнее</a>
+      </div>
+    </div>
+  {% endfor %}
+{% endblock %}

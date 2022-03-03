@@ -1,0 +1,44 @@
+{% extends 'problems/base.html' %}
+
+{% block title %}
+{{ branch.title }}
+{% endblock %}
+
+{% block content %}
+    {% if branch %}
+        <h1 class="mb-2">{{ branch.title }}</h1>
+    {% else %}
+        <h1 class="mb-2">Все разделы</h1>
+    {% endif %}
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'branches' %}">Все разделы</a></li>
+        {% for parent in branch.get_ancestors %}
+        <li class="breadcrumb-item"><a href="{{ parent.get_absolute_url }}">{{ parent.title }}</a></li>
+        {% endfor %}
+        <li class="breadcrumb-item active" aria-current="page">{{ branch.title }}</li>
+        </ol>
+    </nav>
+    <div class="row row-cols-1 row-cols-md-3">
+        {% for node in childs  %}
+            <div class="col mb-4">
+            <a href="{{ node.get_absolute_url }}">
+                <div class="card">
+                  <div class="card-body text-center">
+                    {{ node.title }}
+                  </div>
+                </div>
+            </a>
+
+          </div>
+        {% endfor %}
+    </div>
+    {% for problem in problems  %}
+        <div class="col">
+        <a href="{{ problem.get_absolute_url }}">{{problem}}</a>
+            <div>
+            {{ problem.condition }}
+            </div>
+        </div>
+    {% endfor %}
+{% endblock %}

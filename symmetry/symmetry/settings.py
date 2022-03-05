@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'problems.apps.ProblemsManagerConfig',
     'django_mathjax',
     'mptt',
-    'django_mptt_admin'
+    'django_mptt_admin',
+    'django_better_admin_arrayfield',
 ]
 
 MIDDLEWARE = [
@@ -72,6 +73,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'symmetry.wsgi.application'
+
+INTERNAL_IPS = [
+    # ...
+    "127.0.0.1",
+    # ...
+]
 
 
 # Database

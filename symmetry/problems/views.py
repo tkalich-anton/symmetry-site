@@ -2,7 +2,8 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 
-from .models import Problem, Branch, Theme
+from .models import Problem, Branch, List, ListItem
+
 
 def index(request):
     context = {
@@ -45,8 +46,17 @@ class SingleProblem(DetailView):
         context = super().get_context_data(**kwargs)
         return context
 
-def show_themes(request, themes):
-    return HttpResponse(f"Задание №{themes}")
+class SingleList(DetailView):
+    model = List
+    context_object_name = 'list'
+    template_name = 'problems/list.html'
+    def get_context_data(self, **kwargs):
+        queryset = Problem.objects.filter(problem_item__list__pk=self.kwargs['pk'])
+        context = super().get_context_data(**kwargs)
+        context['problems'] = queryset
+        return context
+
+
 
 def about(request):
     return render(request, 'problems/about.html')

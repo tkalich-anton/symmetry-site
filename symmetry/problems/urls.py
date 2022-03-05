@@ -7,4 +7,5 @@ urlpatterns = [
     path('branches/', BranchList.as_view(), name='branches'),
     re_path(r'^branch/(?P<slug>.+)/$', BranchList.as_view(), name='branch'),
     path('problem/<int:pk>/', SingleProblem.as_view(), name='problem'),
+    path('list/<int:pk>/', SingleList.as_view(), name='list'),
 ]

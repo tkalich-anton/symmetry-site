@@ -1,16 +1,26 @@
 from django.contrib import admin
-from django_mptt_admin.admin import DjangoMpttAdmin
+from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
 
-from .models import Problem, Branch, Source, Author
+from .models import Problem, Branch, Source, Author, List, ListItem
 
-# Register your models here.
-
-admin.site.register(Problem)
 admin.site.register(Source)
 admin.site.register(Author)
+admin.site.register(Branch)
 
-class ThemeAdmin(DjangoMpttAdmin):
-    prepopulated_fields = {"slug": ("title",)}
+class ListItemInline(admin.TabularInline):
+    model = ListItem
+    extra = 0
 
+@admin.register(List)
+class ListAdmin(admin.ModelAdmin, DynamicArrayMixin):
+    inlines = [ListItemInline]
+    list_display = ('__str__', 'status')
 
-admin.site.register(Branch, ThemeAdmin)
+@admin.register(Problem)
+class ProblemAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'branch', 'status')
+
+@admin.register(ListItem)
+class ListItemAdmin(admin.ModelAdmin):
+    pass
+

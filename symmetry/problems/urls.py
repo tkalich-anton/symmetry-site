@@ -1,11 +1,17 @@
-from django.urls import path, re_path
-from .views import *
+from django.urls import path, re_path, include
 
-urlpatterns = [
-    path('', index, name='home'),
-    path('about/', about, name='about'),
-    path('branches/', BranchList.as_view(), name='branches'),
-    re_path(r'^branch/(?P<slug>.+)/$', BranchList.as_view(), name='branch'),
-    path('problem/<int:pk>/', SingleProblem.as_view(), name='problem'),
-    path('list/<int:pk>/', SingleList.as_view(), name='list'),
-]
+from listmanager.views import ListViewSet
+from .views import ProblemTypeViewSet, ProblemViewSet, BranchViewSet, AuthorViewSet, SourceViewSet
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register('problems', ProblemViewSet, basename='Problem')
+router.register('problemtypes', ProblemTypeViewSet)
+router.register('authors', AuthorViewSet)
+router.register('sources', SourceViewSet)
+router.register('branches', BranchViewSet)
+router.register('lists', ListViewSet)
+
+urlpatterns = []
+
+urlpatterns += router.urls

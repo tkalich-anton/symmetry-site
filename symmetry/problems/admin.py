@@ -1,26 +1,29 @@
 from django.contrib import admin
-from django_better_admin_arrayfield.admin.mixins import DynamicArrayMixin
+from django_mptt_admin.admin import DjangoMpttAdmin
 
-from .models import Problem, Branch, Source, Author, List, ListItem
+from .models import Problem, Branch, Source, ProblemType, Author
 
-admin.site.register(Source)
-admin.site.register(Author)
-admin.site.register(Branch)
-
-class ListItemInline(admin.TabularInline):
-    model = ListItem
-    extra = 0
-
-@admin.register(List)
-class ListAdmin(admin.ModelAdmin, DynamicArrayMixin):
-    inlines = [ListItemInline]
-    list_display = ('__str__', 'status')
 
 @admin.register(Problem)
 class ProblemAdmin(admin.ModelAdmin):
-    list_display = ('__str__', 'branch', 'status')
+    list_display = ('id', 'branch', 'problemtype', 'status')
+    actions_on_top = True
 
-@admin.register(ListItem)
-class ListItemAdmin(admin.ModelAdmin):
-    pass
+
+@admin.register(Branch)
+class BranchAdmin(DjangoMpttAdmin):
+    list_display = ['title', 'id', 'slug']
+    prepopulated_fields = {'slug': ('title',)}
+
+@admin.register(Source)
+class SourceAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'id')
+
+@admin.register(Author)
+class AuthorAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'id')
+
+@admin.register(ProblemType)
+class ProblemTypeAdmin(admin.ModelAdmin):
+    list_display = ('__str__', 'condition', 'id')
 

@@ -1,8 +1,18 @@
 from django.db import models
 from django.urls import reverse
-
 from mptt.fields import TreeForeignKey
+from mptt.managers import TreeManager
 from mptt.models import MPTTModel
+
+from listmanager.models import MultiItem
+from mixins.models import CommonModel
+from users.models import CustomUser
+
+
+class CategoryManager(TreeManager):
+    def viewable(self, level):
+        queryset = self.get_queryset().filter(level=level)
+        return queryset
 
 class StatusChoices(models.TextChoices):
     PUBLISHED = 'published', 'Опубликовано'
@@ -11,9 +21,10 @@ class StatusChoices(models.TextChoices):
 
 class Branch(MPTTModel):
     title = models.CharField('Раздел', max_length=50, db_index=True)
-    slug = models.SlugField('Метка', unique=True, null=True)
+    slug = models.SlugField('Флаг', unique=True, null=True)
     parent = TreeForeignKey('self', on_delete=models.PROTECT, null=True, blank=True, related_name='children',
                             db_index=True, verbose_name='Родительская категория')
+    objects = CategoryManager()
 
     def __str__(self):
         return self.title
@@ -31,77 +42,6 @@ class Branch(MPTTModel):
         return obj.pk
 
 
-class List(models.Model):
-    status = models.CharField(
-        'Статус',
-        max_length=15,
-        default=StatusChoices.NOT_PUBLISHED,
-        choices=StatusChoices.choices
-    )
-
-    class Meta:
-        verbose_name = 'Список заданий'
-        verbose_name_plural = 'Списки заданий'
-
-    def __str__(self):
-        return f"Список  {self.pk}"
-
-
-class ListItem(models.Model):
-    problem = models.ForeignKey(
-        'Problem',
-        on_delete=models.PROTECT,
-        limit_choices_to={'status': 'published'},
-        verbose_name='Задание',
-        related_name='problem_item'
-    )
-    list = models.ForeignKey(
-        'List',
-        on_delete=models.CASCADE,
-        verbose_name='Список',
-        related_name='list'
-    )
-
-    class Meta:
-        verbose_name = 'Элемент Списка'
-        verbose_name_plural = 'Элементы Списков'
-        unique_together = (('problem', 'list'),)
-
-    def __str__(self):
-        return f"{self.problem} | {self.list}"
-
-
-class Problem(models.Model):
-    status = models.CharField(
-        'Статус',
-        max_length=15,
-        default=StatusChoices.NOT_PUBLISHED,
-        choices=StatusChoices.choices
-    )
-    condition = models.TextField('Условие')
-    branch = TreeForeignKey('Branch', on_delete=models.SET_DEFAULT, verbose_name='Раздел',
-                            default=Branch.get_default_pk)
-    answer = models.TextField('Ответ', max_length=50, null=True, blank=True)
-    solution = models.TextField('Решение', null=True, blank=True)
-    note = models.TextField('Примечание', null=True, blank=True)
-    complexity = models.IntegerField('Сложность', null=True, blank=True)
-    source = models.ForeignKey('Source', on_delete=models.PROTECT, null=True, verbose_name='Источник', blank=True)
-    author = models.ForeignKey('Author', on_delete=models.PROTECT, null=True, verbose_name='Автор', blank=True)
-
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"Задание {self.id}"
-
-    class Meta:
-        verbose_name = 'Задание'
-        verbose_name_plural = 'Задания'
-
-    def get_absolute_url(self):
-        return reverse('problem', kwargs={'pk': self.pk})
-
-
 class Source(models.Model):
     title = models.CharField('Название', max_length=100)
 
@@ -112,9 +52,14 @@ class Source(models.Model):
         verbose_name = 'Источник'
         verbose_name_plural = 'Источники'
 
+    @classmethod
+    def get_default_pk(cls):
+        obj, created = cls.objects.get_or_create(title="Нет Источника")
+        return obj.pk
+
 
 class Author(models.Model):
-    title = models.CharField('Название', max_length=100)
+    title = models.CharField('Имя', max_length=100)
 
     def __str__(self):
         return self.title
@@ -122,3 +67,113 @@ class Author(models.Model):
     class Meta:
         verbose_name = 'Автор'
         verbose_name_plural = 'Авторы'
+
+    @classmethod
+    def get_default_pk(cls):
+        obj, created = cls.objects.get_or_create(title="Нет Автора")
+        return obj.pk
+
+
+class ProblemType(models.Model):
+    title = models.CharField('Тип', max_length=100)
+    condition = models.CharField('Условие', max_length=100, null=True)
+
+    def __str__(self):
+        return self.title
+
+    class Meta:
+        verbose_name = 'Тип задания'
+        verbose_name_plural = 'Типы заданий'
+
+    @classmethod
+    def get_default_pk(cls):
+        obj, created = cls.objects.get_or_create(title="Без Типа")
+        return obj.pk
+
+
+class Problem(CommonModel):
+
+    status = models.CharField(
+        'Статус',
+        max_length=15,
+        default=StatusChoices.NOT_PUBLISHED,
+        choices=StatusChoices.choices
+    )
+    problemtype = models.ForeignKey(
+        'ProblemType',
+        on_delete=models.SET_DEFAULT,
+        default=ProblemType.get_default_pk,
+        null=True,
+        blank=True,
+        verbose_name='Тип задания'
+    )
+    body = models.TextField('Условие')
+    branch = TreeForeignKey(
+        'Branch',
+        on_delete=models.SET_DEFAULT,
+        default=Branch.get_default_pk,
+        verbose_name='Раздел',
+        limit_choices_to={'children__isnull': True}
+    )
+    answer = models.TextField(
+        'Ответ',
+        max_length=50,
+        blank=True
+    )
+    prompt = models.TextField(
+        'Подсказка',
+        blank=True
+    )
+    solution = models.TextField(
+        'Решение',
+        blank=True
+    )
+    open_solution = models.BooleanField(
+        'Открытое решение',
+        default=False
+    )
+    note = models.TextField(
+        'Примечание',
+        blank=True
+    )
+    analogs = models.ManyToManyField(
+        'self',
+        verbose_name='Аналоги',
+        blank=True
+    )
+    example = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        verbose_name='Пример',
+        blank=True, null=True,
+        limit_choices_to={'open_solution': True},
+    )
+    complexity = models.IntegerField(
+        'Сложность',
+        null=True,
+        default=1
+    )
+    source = models.ForeignKey(
+        'Source',
+        on_delete=models.SET_DEFAULT,
+        default=Source.get_default_pk,
+        verbose_name='Источник',
+        related_name="source"
+    )
+    author = models.ForeignKey(
+        'Author',
+        on_delete=models.SET_DEFAULT,
+        default=Author.get_default_pk,
+        related_name="author",
+        verbose_name='Автор'
+    )
+
+    def __str__(self):
+        return f"Задание {self.id}"
+
+    class Meta:
+        verbose_name = 'Задание'
+        verbose_name_plural = 'Задания'
+
+    def get_absolute_url(self):
+        return reverse('problem', kwargs={'pk': self.pk})

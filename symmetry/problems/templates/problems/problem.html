@@ -18,10 +18,10 @@
 </nav>
 <div class="card mb-3">
     <div class="card-header">
-        <i>Условие:</i>
+        <i>{{ problem.problemtype.condition }}</i>
     </div>
-    <div class="card-body">
-        <p>{{ problem.condition }}</p>
+    <div class="card-body text-center">
+        {{ problem.body }}
     </div>
 </div>
 {% if problem.answer %}

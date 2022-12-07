@@ -34,10 +34,15 @@
         {% endfor %}
     </div>
     {% for problem in problems  %}
-        <div class="col">
-        <a href="{{ problem.get_absolute_url }}">{{problem}}</a>
-            <div>
-            {{ problem.condition }}
+        <div class="card mb-3">
+            <div class="card-header">
+                <a href="{{ problem.get_absolute_url }}">{{problem}}</a>
+            </div>
+            <div class="card-body">
+                <i>{{ problem.problemtype.condition }}</i>
+                <div class="text-center">
+                    {{ problem.body }}
+                </div>
             </div>
         </div>
     {% endfor %}
